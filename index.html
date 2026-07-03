@@ -351,6 +351,11 @@ function renderBoard() {
 }
 
 function applyState(newState, animate) {
+  if (!newState) newState = emptyState();
+  newState.failed = newState.failed || [];
+  newState.cells = newState.cells || {};
+  if (newState.active === undefined) newState.active = -1;
+
   const old = prevState || emptyState();
   DATA.rows.forEach((row, i) => {
     const rowEl = document.querySelector('.row[data-i="' + i + '"]');
