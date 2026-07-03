@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="admin_credentials.js"></script>
+<script src="firebase_config.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
   :root {
     --bg1: #0f172a;
@@ -393,6 +397,27 @@
 const STORAGE_KEY = 'cnkd_game_data';
 const STATE_KEY   = 'cnkd_play_state';
 
+let firebaseDbRef = null;
+let firebaseStateRef = null;
+let firebaseDataRef = null;
+
+function initFirebase() {
+  if (window.FIREBASE_CONFIG) {
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+      }
+      firebaseDbRef = firebase.database();
+      firebaseStateRef = firebaseDbRef.ref(STATE_KEY);
+      firebaseDataRef = firebaseDbRef.ref(STORAGE_KEY);
+      console.log("Firebase initialized successfully.");
+    } catch (e) {
+      console.error("Firebase init failed:", e);
+    }
+  }
+}
+initFirebase();
+
 const SAMPLE = {
   title: 'CHỦ ĐỀ: VIỆT NAM QUÊ HƯƠNG TÔI',
   keyword: 'VIETNAM',
@@ -468,6 +493,9 @@ function loadPlayState(d) {
 function savePlayState() {
   ctlState.fp = dataFingerprint(CTL_DATA);
   localStorage.setItem(STATE_KEY, JSON.stringify(ctlState));
+  if (firebaseStateRef) {
+    firebaseStateRef.set(ctlState);
+  }
 }
 function cellsOf(i) {
   if (!ctlState.cells[i]) ctlState.cells[i] = [];
@@ -813,6 +841,12 @@ function save() {
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   localStorage.removeItem(STATE_KEY); // ván mới
+  if (firebaseDataRef) {
+    firebaseDataRef.set(data);
+  }
+  if (firebaseStateRef) {
+    firebaseStateRef.remove();
+  }
   toast('💾 Đã lưu! Màn hình chơi sẽ tự cập nhật.', 'good');
 }
 

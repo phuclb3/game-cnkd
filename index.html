@@ -6,6 +6,10 @@
 <title>Ô Chữ Kỳ Diệu — Màn Hình Chơi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="firebase_config.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <style>
   :root {
     --tile: #1d4ed8;
@@ -202,6 +206,44 @@
 const STORAGE_KEY = 'cnkd_game_data';
 const STATE_KEY   = 'cnkd_play_state';
 
+let firebaseDbRef = null;
+let firebaseStateRef = null;
+let firebaseDataRef = null;
+
+function initFirebase() {
+  if (window.FIREBASE_CONFIG) {
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+      }
+      firebaseDbRef = firebase.database();
+      firebaseStateRef = firebaseDbRef.ref(STATE_KEY);
+      firebaseDataRef = firebaseDbRef.ref(STORAGE_KEY);
+      
+      // Lắng nghe thay đổi dữ liệu câu hỏi (bộ đề)
+      firebaseDataRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
+          boot(false); // Reload bảng
+        }
+      });
+
+      // Lắng nghe thay đổi trạng thái ván chơi
+      firebaseStateRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        const st = val || emptyState();
+        applyState(st, true);
+      });
+      
+      console.log("Firebase listener setup successfully.");
+    } catch (e) {
+      console.error("Firebase init failed:", e);
+    }
+  }
+}
+initFirebase();
+
 const SAMPLE = {
   title: 'CHỦ ĐỀ: VIỆT NAM QUÊ HƯƠNG TÔI',
   keyword: 'VIETNAM',
@@ -369,6 +411,7 @@ function applyState(newState, animate) {
 
 /* ---------- live sync ---------- */
 window.addEventListener('storage', e => {
+  if (window.FIREBASE_CONFIG) return;
   if (e.key === STATE_KEY) {
     loadData(); // phòng khi fp đổi
     const st = loadState();
