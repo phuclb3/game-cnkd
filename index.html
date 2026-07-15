@@ -118,7 +118,7 @@
 
   /* ===== question bar ===== */
   .question-bar {
-    flex: 0 0 auto; margin: 6px auto 18px; max-width: min(1100px, 92vw);
+    flex: 0 0 auto; margin: 6px auto 36px; max-width: min(1100px, 92vw);
     background: var(--panel); border: 1px solid var(--panel-border);
     border-radius: 18px; padding: 14px 26px; backdrop-filter: blur(12px);
     display: flex; align-items: center; gap: 16px;
@@ -425,7 +425,14 @@ window.addEventListener('storage', e => {
     boot(false);
   }
 });
-window.addEventListener('resize', fitBoard);
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(() => {
+    fitBoard();
+  });
+  ro.observe(document.getElementById('boardArea'));
+} else {
+  window.addEventListener('resize', fitBoard);
+}
 
 /* ---------- sound ---------- */
 let audioCtx = null;
