@@ -1,4 +1,4 @@
 window.ADMIN_CREDENTIALS = {
   "username": "admin",
-  "password": "admin123"
+  "password": "Admin@2026"
 };
